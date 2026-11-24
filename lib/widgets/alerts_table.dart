@@ -35,6 +35,7 @@ class AlertsTable extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
             dataRowMinHeight: 56,
+            dataRowMaxHeight: 72,
             showCheckboxColumn: false,
             columns: const [
               DataColumn(label: Text('Threat')),

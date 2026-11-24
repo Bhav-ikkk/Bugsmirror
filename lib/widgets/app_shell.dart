@@ -74,10 +74,15 @@ class AppShell extends StatelessWidget {
                       horizontal: compact ? 16 : 30,
                       vertical: 10,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [brand, nav],
-                    ),
+                    child: compact
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [brand, const SizedBox(height: 8), nav],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [brand, nav],
+                          ),
                   );
                 },
               ),
