@@ -31,11 +31,12 @@ Tools • Dart 3.14.0 • DevTools 2.61.0
 - `lib/routing/` maps the Dashboard, Alerts, and individual alert URLs to screens.
 - `lib/screens/` implements the three screens and sends user actions to the provider.
 - `lib/widgets/` contains shared UI, filters, table and cards, pagination, and state views.
-- `lib/theme/` defines the console palette and Material theme.
+- `lib/theme/` defines the Tripwire palette, Material theme, and typography.
+- `assets/fonts/` bundles Space Grotesk and IBM Plex Mono with their OFL licenses.
 - `lib/utils/` implements alert queries, local dates, and CSV generation and download.
 - `test/` exercises data parsing, sorting, filters, resolution, exports, and screen behavior.
 
-The repository loads the JSON after a one-second delay. The provider keeps the alerts in memory. The Alerts screen filters the list, sorts the matches, then takes five for the current page. When a user confirms resolution, the provider replaces that alert and notifies the screens so they recompute their counts and results.
+The repository loads the JSON after a one-second delay. The Overview derives its metrics from the loaded records. The detail inspector shows the raw source record and tracks session resolution separately. The provider keeps the alerts in memory. The Alerts screen filters the list, sorts the matches, then takes five for the current page. When a user confirms resolution, the provider replaces that alert and notifies the screens so they recompute their counts and results.
 
 ## What works and what does not
 
