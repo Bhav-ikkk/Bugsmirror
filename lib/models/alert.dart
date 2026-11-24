@@ -49,6 +49,11 @@ class Alert {
   final AlertStatus status;
   final Map<String, Object?> raw;
 
+  Object? get rawSeverity => raw['severity'];
+  Object? get rawStatus => raw['status'];
+  bool get isDeviceModelMissing => readText(raw['deviceModel'], '') == '';
+  bool get isOsVersionMissing => readText(raw['osVersion'], '') == '';
+
   Alert resolved() => Alert._(
     id,
     appId,

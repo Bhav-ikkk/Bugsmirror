@@ -7,51 +7,93 @@ class SummaryCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
+    required this.caption,
     required this.icon,
+    required this.detail,
     this.urgent = false,
   });
   final String label;
   final int value;
+  final String caption;
   final IconData icon;
+  final Widget detail;
   final bool urgent;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: panelDecoration(),
-    padding: const EdgeInsets.all(18),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: urgent ? ConsoleColors.redSoft : ConsoleColors.blueSoft,
-            borderRadius: BorderRadius.circular(8),
+  Widget build(BuildContext context) {
+    final ink = urgent ? TripwireColors.surface : TripwireColors.ink;
+    final muted = urgent ? TripwireColors.darkMuted : TripwireColors.secondary;
+    return Container(
+      decoration: panelDecoration(
+        color: urgent ? TripwireColors.ink : TripwireColors.surface,
+      ),
+      padding: const EdgeInsets.all(22),
+      constraints: const BoxConstraints(minHeight: 218),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(label, style: mono(color: muted, spacing: .65)),
+              ),
+              Icon(icon, size: 18, color: urgent ? TripwireColors.high : muted),
+            ],
           ),
-          child: Icon(
-            icon,
-            size: 19,
-            color: urgent ? ConsoleColors.red : ConsoleColors.blue,
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 9,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                '$value',
+                style: TextStyle(
+                  fontSize: 62,
+                  height: 1.02,
+                  letterSpacing: -3.3,
+                  color: ink,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              Text(caption, style: TextStyle(color: muted, fontSize: 13)),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '$value',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: ConsoleColors.muted,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 13),
+          detail,
+        ],
+      ),
+    );
+  }
+}
+
+class MetricBar extends StatelessWidget {
+  const MetricBar(this.segments, {super.key});
+  final List<(int, Color)> segments;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = segments.where((part) => part.$1 > 0);
+    return SizedBox(
+      height: 6,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: visible.isEmpty
+            ? const ColoredBox(color: TripwireColors.track)
+            : Row(
+                spacing: 3,
+                children: [
+                  for (final (value, color) in visible)
+                    Expanded(
+                      flex: value,
+                      child: ColoredBox(
+                        color: color,
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
 }

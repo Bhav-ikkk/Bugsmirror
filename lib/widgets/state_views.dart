@@ -51,7 +51,7 @@ class MessageView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 30, color: ConsoleColors.blue),
+          Icon(icon, size: 30, color: TripwireColors.secondary),
           const SizedBox(height: 10),
           Text(
             title,

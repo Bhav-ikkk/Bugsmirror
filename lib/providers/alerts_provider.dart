@@ -12,6 +12,10 @@ class AlertsProvider extends ChangeNotifier {
   AlertsProvider(this.repository);
   final AlertRepository repository;
   List<Alert> _alerts = [];
+  final _sessionResolvedAt = <String, DateTime>{};
+  DateTime? lastLoadedAt;
+
+  DateTime? resolvedAt(String id) => _sessionResolvedAt[id];
   List<MonitoredApp> _apps = [];
   bool _disposed = false;
   int _request = 0;
@@ -32,6 +36,8 @@ class AlertsProvider extends ChangeNotifier {
       if (_disposed || request != _request) return;
       _alerts = data.alerts.toList();
       _apps = data.apps;
+      _sessionResolvedAt.clear();
+      lastLoadedAt = DateTime.now();
       state = LoadState.loaded;
       page = 1;
     } catch (_) {
@@ -49,6 +55,27 @@ class AlertsProvider extends ChangeNotifier {
       .length;
   String? get appId => _appId;
 
+  int severityCount(Severity severity) =>
+      _alerts.where((alert) => alert.severity == severity).length;
+
+  int get resolvedCount => total - open;
+
+  List<Alert> get latestOpenAlerts =>
+      queryAlerts(_alerts, status: AlertStatus.open);
+
+  Map<Severity, int> openBySeverity(String appId) {
+    final counts = {for (final severity in Severity.values) severity: 0};
+    for (final alert in _alerts) {
+      if (alert.appId == appId && alert.status == AlertStatus.open) {
+        counts.update(alert.severity, (count) => count + 1);
+      }
+    }
+    return counts;
+  }
+
+  MonitoredApp? appById(String id) =>
+      _apps.where((app) => app.id == id).firstOrNull;
+
   List<AppSummary> get summaries {
     final counts = <String, int>{};
     for (final alert in _alerts.where((a) => a.status == AlertStatus.open)) {
@@ -61,9 +88,7 @@ class AlertsProvider extends ChangeNotifier {
       });
   }
 
-  String appLabel(String id) =>
-      _apps.where((app) => app.id == id).firstOrNull?.label ??
-      'Unknown app (Unknown)';
+  String appLabel(String id) => appById(id)?.label ?? 'Unknown app (Unknown)';
   Alert? byId(String id) => _alerts.where((a) => a.id == id).firstOrNull;
 
   List<Alert> filtered({String? routeAppId}) => queryAlerts(
@@ -74,6 +99,13 @@ class AlertsProvider extends ChangeNotifier {
     deviceSearch: deviceSearch,
     sort: sort,
   );
+
+  void selectRouteFilters(String? app, AlertStatus? routeStatus) {
+    if (_appId == app && status == routeStatus) return;
+    _appId = app;
+    status = routeStatus;
+    _resetPage();
+  }
 
   void selectApp(String? value) {
     if (_appId == value) return;
@@ -126,6 +158,7 @@ class AlertsProvider extends ChangeNotifier {
     );
     if (index < 0) return;
     _alerts[index] = _alerts[index].resolved();
+    _sessionResolvedAt[id] = DateTime.now();
     page = page.clamp(1, pageCount(filtered().length));
     notifyListeners();
   }

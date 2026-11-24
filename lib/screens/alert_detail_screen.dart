@@ -6,6 +6,7 @@ import '../models/alert_enums.dart';
 import '../routing/app_router.dart';
 import '../theme/app_theme.dart';
 import '../utils/date_formatter.dart';
+import '../widgets/alert_inspector.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/severity_chip.dart';
 import '../widgets/state_views.dart';
@@ -18,7 +19,8 @@ class AlertDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LoadGuard(
     loaded: (provider) {
-      void goBack() => context.go(alertsLocation(provider.appId));
+      void goBack() =>
+          context.go(alertsLocation(provider.appId, provider.status));
       final alert = provider.byId(id);
       if (alert == null) {
         return MessageView(
@@ -27,131 +29,189 @@ class AlertDetailScreen extends StatelessWidget {
           onAction: goBack,
         );
       }
-
-      final fields = <String, String>{
-        'Alert ID': alert.id,
-        'Application': provider.appLabel(alert.appId),
-        'App ID': alert.appId.isEmpty ? '-' : alert.appId,
-        'Threat code': alert.threatCode,
-        'Device model': alert.device,
-        'OS version': alert.os,
-        'Reported time': formatReportedAt(alert.reportedAt),
+      final width = MediaQuery.sizeOf(context).width;
+      final app = provider.appById(alert.appId);
+      final name = getThreatDisplayName(alert.threatCode);
+      final appLabel = provider.appLabel(alert.appId);
+      final time = formatReportedAt(alert.reportedAt);
+      final resolvedAt = provider.resolvedAt(id);
+      final fields = [
+        FieldValue.text('ALERT ID', alert.id, technical: true),
+        FieldValue.text('THREAT', name),
+        FieldValue.text('THREAT CODE', alert.threatCode, technical: true),
+        FieldValue('SEVERITY', SeverityChip(alert.severity)),
+        FieldValue('STATUS', StatusBadge(alert.status)),
+        FieldValue.text(
+          'APP ID',
+          alert.appId.isEmpty ? '-' : alert.appId,
+          technical: true,
+        ),
+        FieldValue.text('APP', appLabel),
+        FieldValue.text('PLATFORM', app?.platform ?? 'Unknown'),
+        FieldValue.text(
+          'DEVICE MODEL',
+          alert.device,
+          note: alert.isDeviceModelMissing ? 'Missing in data' : null,
+        ),
+        FieldValue.text(
+          'OS VERSION',
+          alert.os,
+          note: alert.isOsVersionMissing ? 'Missing in data' : null,
+        ),
+        FieldValue.text(
+          'REPORTED AT',
+          time,
+          note: alert.reportedAt == null ? null : 'Your local time',
+        ),
+        FieldValue.text(
+          'REPORTED AT (RAW)',
+          alert.raw['reportedAt']?.toString() ?? '-',
+          technical: true,
+          note: alert.reportedAt == null ? null : 'ms since 1970 · UTC',
+        ),
         for (final entry in alert.raw.entries)
           if (!const {
             'id',
             'appId',
             'threatType',
             'severity',
+            'status',
             'deviceModel',
             'osVersion',
             'reportedAt',
-            'status',
           }.contains(entry.key))
-            entry.key: entry.value?.toString() ?? '-',
-      };
+            FieldValue.text(entry.key, entry.value?.toString() ?? '-'),
+      ];
+
+      Future<void> confirmResolution() async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: const Text('Are you sure?'),
+            content: const Text('This alert will be marked as resolved.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                child: const Text('Confirm'),
+              ),
+            ],
+          ),
+        );
+        if (context.mounted && confirmed == true) {
+          provider.resolveAlert(alert.id);
+        }
+      }
+
       return PageBody(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: goBack,
-              icon: const Icon(Icons.arrow_back_rounded, size: 18),
-              label: const Text('Back to alerts'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            getThreatDisplayName(alert.threatCode),
-            style: Theme.of(context).textTheme.headlineLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
           Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 8,
-            runSpacing: 8,
-            children: [SeverityChip(alert.severity), StatusBadge(alert.status)],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            decoration: panelDecoration(),
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Alert details',
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700),
+            children: [
+              TextButton.icon(
+                onPressed: goBack,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 36),
                 ),
-                const SizedBox(height: 14),
-                LayoutBuilder(
-                  builder: (_, bounds) {
-                    final width = bounds.maxWidth < 520
-                        ? bounds.maxWidth
-                        : (bounds.maxWidth - 18) / 2;
-                    return Wrap(
-                      spacing: 18,
-                      runSpacing: 12,
-                      children: [
-                        for (final field in fields.entries)
-                          SizedBox(
-                            width: width,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  field.key,
-                                  style: const TextStyle(
-                                    color: ConsoleColors.muted,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                SelectableText(field.value),
-                              ],
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          if (alert.status == AlertStatus.open) ...[
-            const SizedBox(height: 18),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Mark as resolved'),
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (dialog) => AlertDialog(
-                      title: const Text('Are you sure?'),
-                      content: const Text(
-                        'This alert will be marked as resolved.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dialog, false),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(dialog, true),
-                          child: const Text('Confirm'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (context.mounted && confirmed == true) {
-                    provider.resolveAlert(alert.id);
-                  }
-                },
+                icon: const Icon(Icons.chevron_left, size: 19),
+                label: const Text('Alerts'),
+                key: const Key('back-to-alerts'),
               ),
-            ),
-          ],
+              Text('/', style: mono()),
+              Text(alert.id, style: mono(color: TripwireColors.ink)),
+            ],
+          ),
+          const SizedBox(height: 13),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 5,
+            children: [
+              SeverityChip(alert.severity),
+              StatusBadge(alert.status),
+              Text(alert.threatCode, style: mono(size: 10)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: width >= 900 ? width * .62 : width,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: pageTitle(width)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Reported by $appLabel on ${alert.device} · $time',
+                      style: const TextStyle(
+                        color: TripwireColors.secondary,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (alert.status == AlertStatus.open)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FilledButton(
+                      onPressed: confirmResolution,
+                      child: const Text('Mark as resolved'),
+                    ),
+                    const SizedBox(height: 5),
+                    Text('You’ll be asked to confirm', style: mono(size: 10)),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 26),
+          LayoutBuilder(
+            builder: (_, bounds) {
+              final metadata = FieldsPanel(fields: fields);
+              final inspector = Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RawAlertPanel(
+                    alert: alert,
+                    resolvedInSession: resolvedAt != null,
+                  ),
+                  const SizedBox(height: 14),
+                  AlertTimeline(
+                    alert: alert,
+                    loadedAt: provider.lastLoadedAt,
+                    resolvedAt: resolvedAt,
+                  ),
+                ],
+              );
+              if (width < 900) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [metadata, const SizedBox(height: 14), inspector],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 61, child: metadata),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 39, child: inspector),
+                ],
+              );
+            },
+          ),
         ],
       );
     },

@@ -4,6 +4,7 @@ import '../data/threat_names.dart';
 import '../models/alert.dart';
 import '../theme/app_theme.dart';
 import '../utils/date_formatter.dart';
+import 'alerts_table.dart';
 import 'severity_chip.dart';
 import 'status_badge.dart';
 
@@ -20,18 +21,18 @@ class AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
+    color: TripwireColors.surface,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(color: ConsoleColors.line),
+      borderRadius: BorderRadius.circular(tripwire.panelRadius),
+      side: const BorderSide(color: TripwireColors.border),
     ),
-    color: ConsoleColors.surface,
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onOpen,
       child: Padding(
         padding: const EdgeInsets.all(15),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
@@ -39,34 +40,34 @@ class AlertCard extends StatelessWidget {
                   child: Text(
                     getThreatDisplayName(alert.threatCode),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w700,
                       fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_right_rounded,
-                  color: ConsoleColors.muted,
+                  Icons.chevron_right,
+                  size: 18,
+                  color: TripwireColors.muted,
                 ),
               ],
             ),
-            const SizedBox(height: 5),
+            Text(threatCaption(alert.threatCode), style: mono(size: 10)),
+            const SizedBox(height: 8),
             Text(app),
             Text(
               alert.device,
-              style: const TextStyle(color: ConsoleColors.muted),
+              style: const TextStyle(color: TripwireColors.secondary),
             ),
-            Text(
-              formatReportedAt(alert.reportedAt),
-              style: const TextStyle(color: ConsoleColors.muted),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 9),
             Wrap(
               spacing: 8,
               runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 SeverityChip(alert.severity),
                 StatusBadge(alert.status),
+                Text(formatReportedAt(alert.reportedAt), style: mono(size: 10)),
               ],
             ),
           ],
