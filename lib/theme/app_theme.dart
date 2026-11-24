@@ -8,6 +8,8 @@ abstract final class TripwireColors {
   static const ink = Color(0xff141414);
   static const secondary = Color(0xff666259);
   static const muted = Color(0xff746f65);
+  static const timestamp = Color(0xff5c5850);
+  static const tableHover = Color(0xfffaf8f4);
   static const border = Color(0xffe5e1d8);
   static const row = Color(0xffefece5);
   static const darkRule = Color(0xff34312d);
@@ -87,7 +89,11 @@ ButtonStyle control({bool filled = false}) => ButtonStyle(
   ),
   side: filled
       ? null
-      : const WidgetStatePropertyAll(BorderSide(color: TripwireColors.border)),
+      : WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.focused)
+              ? const BorderSide(color: TripwireColors.ink, width: 1.5)
+              : const BorderSide(color: TripwireColors.border),
+        ),
   backgroundColor: WidgetStateProperty.resolveWith((states) {
     if (states.contains(WidgetState.disabled)) return TripwireColors.track;
     return filled ? TripwireColors.ink : TripwireColors.surface;
@@ -109,6 +115,14 @@ final appTheme = ThemeData(
     outlineVariant: TripwireColors.row,
   ),
   extensions: const [tripwire],
+  dialogTheme: DialogThemeData(
+    backgroundColor: TripwireColors.surface,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(tripwire.panelRadius),
+      side: const BorderSide(color: TripwireColors.border),
+    ),
+  ),
   dividerColor: TripwireColors.row,
   dividerTheme: const DividerThemeData(color: TripwireColors.row, thickness: 1),
   filledButtonTheme: FilledButtonThemeData(style: control(filled: true)),
@@ -119,6 +133,10 @@ final appTheme = ThemeData(
     isDense: true,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(tripwire.controlRadius),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(tripwire.controlRadius),
+      borderSide: const BorderSide(color: TripwireColors.ink, width: 1.5),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(tripwire.controlRadius),

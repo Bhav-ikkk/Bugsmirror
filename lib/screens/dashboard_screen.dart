@@ -63,38 +63,12 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
                 style: pageTitle(width)
-                    .copyWith(fontSize: width < 600 ? 32 : 48),
+                    .copyWith(fontSize: width < 640 ? 28 : 48),
               ),
             ),
           ),
           const SizedBox(height: 14),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            runSpacing: 14,
-            spacing: 18,
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.55,
-                    color: TripwireColors.secondary,
-                  ),
-                ),
-              ),
-              FilledButton(
-                onPressed: () {
-                  provider.clearFilters();
-                  provider.selectRouteFilters(null, AlertStatus.open);
-                  context.go(alertsLocation(null, AlertStatus.open));
-                },
-                child: const Text('Review open alerts'),
-              ),
-            ],
-          ),
+          _OverviewActions(provider: provider, description: subtitle),
           const SizedBox(height: 30),
           _OverviewMetrics(provider: provider),
           const SizedBox(height: 25),
@@ -107,13 +81,15 @@ class DashboardScreen extends StatelessWidget {
                   children: [apps, const SizedBox(height: 14), latest],
                 );
               }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 62, child: apps),
-                  const SizedBox(width: 16),
-                  Expanded(flex: 38, child: latest),
-                ],
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(flex: 62, child: apps),
+                    const SizedBox(width: 16),
+                    Expanded(flex: 38, child: latest),
+                  ],
+                ),
               );
             },
           ),
@@ -121,6 +97,56 @@ class DashboardScreen extends StatelessWidget {
       );
     },
   );
+}
+
+class _OverviewActions extends StatelessWidget {
+  const _OverviewActions({required this.provider, required this.description});
+  final AlertsProvider provider;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final summary = Text(
+      description,
+      style: const TextStyle(
+        fontSize: 15,
+        height: 1.55,
+        color: TripwireColors.secondary,
+      ),
+    );
+    final review = FilledButton(
+      style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+      onPressed: () {
+        provider.clearFilters();
+        provider.selectRouteFilters(null, AlertStatus.open);
+        context.go(alertsLocation(null, AlertStatus.open));
+      },
+      child: const Text('Review open alerts'),
+    );
+    if (width < 640) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [summary, const SizedBox(height: 13), review],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 690),
+              child: summary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 20),
+        review,
+      ],
+    );
+  }
 }
 
 class _OverviewMetrics extends StatelessWidget {
@@ -284,36 +310,20 @@ class _AppsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _Panel(
+    footer: Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 13),
+      child: Text(
+        '${provider.apps.length} monitored apps · ${provider.open} open alerts',
+        style: mono(size: 10),
+      ),
+    ),
     children: [
-      Padding(
-        padding: const EdgeInsets.all(19),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Apps',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 3),
-            SizedBox(
-              width: double.infinity,
-              child: Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                spacing: 8,
-                runSpacing: 5,
-                children: [
-                  const Text(
-                    'Select an app to open its alerts, already filtered.',
-                    style: TextStyle(color: TripwireColors.secondary),
-                  ),
-                  Text(
-                    'SORTED BY OPEN ALERTS',
-                    style: mono(size: 10, spacing: .55),
-                  ),
-                ],
-              ),
-            ),
-          ],
+      _PanelHeading(
+        title: 'Apps',
+        subtitle: 'Select an app to open its alerts, already filtered.',
+        trailing: Text(
+          'SORTED BY OPEN ALERTS',
+          style: mono(size: 10, spacing: .55),
         ),
       ),
       ColoredBox(
@@ -375,7 +385,10 @@ class _AppRow extends StatelessWidget {
       InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: MediaQuery.sizeOf(context).width >= 960 ? 18 : 14,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -456,42 +469,22 @@ class _LatestPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alerts = provider.latestOpenAlerts.take(4);
+    final alerts = provider.latestOpenAlerts.take(3);
     return _Panel(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(19),
-          child: Row(
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Latest open',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Newest first',
-                      style: TextStyle(color: TripwireColors.secondary),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  provider.clearFilters();
-                  context.go('/alerts');
-                },
-                child: const Text(
-                  'All alerts',
-                  style: TextStyle(decoration: TextDecoration.underline),
-                ),
-              ),
-            ],
+        _PanelHeading(
+          title: 'Latest open',
+          subtitle: 'Newest first',
+          trailing: TextButton(
+            onPressed: () {
+              provider.clearFilters();
+              context.go('/alerts');
+            },
+            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            child: const Text(
+              'All alerts',
+              style: TextStyle(decoration: TextDecoration.underline),
+            ),
           ),
         ),
         for (final alert in alerts) ...[
@@ -499,7 +492,7 @@ class _LatestPanel extends StatelessWidget {
           InkWell(
             onTap: () => context.go('/alerts/${Uri.encodeComponent(alert.id)}'),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(19, 13, 19, 14),
+              padding: const EdgeInsets.fromLTRB(19, 12, 19, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -544,9 +537,54 @@ class _LatestPanel extends StatelessWidget {
   }
 }
 
+class _PanelHeading extends StatelessWidget {
+  const _PanelHeading({
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 88),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(19, 20, 19, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: TripwireColors.secondary),
+                ),
+                trailing,
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _Panel extends StatelessWidget {
-  const _Panel({required this.children});
+  const _Panel({required this.children, this.footer});
   final List<Widget> children;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -558,7 +596,18 @@ class _Panel extends StatelessWidget {
     clipBehavior: Clip.antiAlias,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: children,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
+        if (footer case final content?)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [const Divider(height: 1), content],
+          ),
+      ],
     ),
   );
 }

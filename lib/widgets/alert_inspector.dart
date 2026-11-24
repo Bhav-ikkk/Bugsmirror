@@ -43,8 +43,13 @@ class FieldValue {
 }
 
 class FieldsPanel extends StatelessWidget {
-  const FieldsPanel({super.key, required this.fields});
+  const FieldsPanel({
+    super.key,
+    required this.fields,
+    required this.stackLabels,
+  });
   final List<FieldValue> fields;
+  final bool stackLabels;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -73,38 +78,38 @@ class FieldsPanel extends StatelessWidget {
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 10),
-            child: LayoutBuilder(
-              builder: (_, bounds) {
-                final label = Text(
-                  field.label,
-                  style: mono(size: 10, spacing: .65),
-                );
-                if (bounds.maxWidth < 420) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [label, const SizedBox(height: 5), field.value],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(width: 151, child: label),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: field.value,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+            child: _FieldRow(field: field, stackLabels: stackLabels),
           ),
         ],
       ],
     ),
   );
+}
+
+class _FieldRow extends StatelessWidget {
+  const _FieldRow({required this.field, required this.stackLabels});
+  final FieldValue field;
+  final bool stackLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = Text(field.label, style: mono(size: 10, spacing: .65));
+    if (stackLabels) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [label, const SizedBox(height: 5), field.value],
+      );
+    }
+    return Row(
+      children: [
+        SizedBox(width: 151, child: label),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Align(alignment: Alignment.centerLeft, child: field.value),
+        ),
+      ],
+    );
+  }
 }
 
 class RawAlertPanel extends StatelessWidget {
@@ -272,6 +277,7 @@ class AlertTimeline extends StatelessWidget {
             Icons.circle,
             'Reported by the SDK',
             formatReportedAt(alert.reportedAt),
+            first: true,
           ),
           _entry(Icons.circle, 'Loaded into the dashboard', _local(loadedAt)),
           _entry(
@@ -285,6 +291,7 @@ class AlertTimeline extends StatelessWidget {
                 ? 'Marked resolved in source data'
                 : 'Pending',
             color: resolved ? TripwireColors.green : TripwireColors.muted,
+            last: true,
           ),
         ],
       ),
@@ -296,26 +303,48 @@ class AlertTimeline extends StatelessWidget {
     String title,
     String caption, {
     Color color = TripwireColors.ink,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 3),
-          child: Icon(icon, size: 13, color: color),
+    bool first = false,
+    bool last = false,
+  }) => Stack(
+    children: [
+      Positioned(
+        left: 6,
+        top: first ? 10 : 0,
+        bottom: last ? null : 0,
+        height: last ? 10 : null,
+        child: const ColoredBox(
+          color: TripwireColors.border,
+          child: SizedBox(width: 1),
         ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-              Text(caption, style: mono(size: 10)),
-            ],
-          ),
+      ),
+      Padding(
+        padding: EdgeInsets.only(bottom: last ? 0 : 17),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: ColoredBox(
+                color: TripwireColors.surface,
+                child: Icon(icon, size: 13, color: color),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Text(caption, style: mono(size: 10)),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
+      ),
+    ],
   );
 }

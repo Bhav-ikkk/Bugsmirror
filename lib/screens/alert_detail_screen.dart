@@ -106,6 +106,53 @@ class AlertDetailScreen extends StatelessWidget {
         }
       }
 
+      final mobile = width < 800;
+      final heading = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: pageTitle(width)),
+          const SizedBox(height: 8),
+          Text(
+            'Reported by $appLabel on ${alert.device} · $time',
+            style: const TextStyle(
+              color: TripwireColors.secondary,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      );
+      final action = Column(
+        crossAxisAlignment: mobile
+            ? CrossAxisAlignment.stretch
+            : CrossAxisAlignment.end,
+        children: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+              minimumSize: Size(0, mobile ? 44 : 40),
+            ),
+            onPressed: confirmResolution,
+            child: const Text('Mark as resolved'),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'You’ll be asked to confirm',
+            textAlign: mobile ? TextAlign.center : TextAlign.right,
+            style: mono(size: 10),
+          ),
+        ],
+      );
+      final metadata = FieldsPanel(fields: fields, stackLabels: width < 520);
+      final raw = RawAlertPanel(
+        alert: alert,
+        resolvedInSession: resolvedAt != null,
+      );
+      final timeline = AlertTimeline(
+        alert: alert,
+        loadedAt: provider.lastLoadedAt,
+        resolvedAt: resolvedAt,
+      );
+
       return PageBody(
         children: [
           Wrap(
@@ -138,80 +185,51 @@ class AlertDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
-            children: [
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: width >= 900 ? width * .62 : width,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: pageTitle(width)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Reported by $appLabel on ${alert.device} · $time',
-                      style: const TextStyle(
-                        color: TripwireColors.secondary,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (alert.status == AlertStatus.open)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FilledButton(
-                      onPressed: confirmResolution,
-                      child: const Text('Mark as resolved'),
-                    ),
-                    const SizedBox(height: 5),
-                    Text('You’ll be asked to confirm', style: mono(size: 10)),
-                  ],
-                ),
+          if (mobile) ...[
+            heading,
+            if (alert.status == AlertStatus.open) ...[
+              const SizedBox(height: 14),
+              action,
             ],
-          ),
-          const SizedBox(height: 26),
-          LayoutBuilder(
-            builder: (_, bounds) {
-              final metadata = FieldsPanel(fields: fields);
-              final inspector = Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  RawAlertPanel(
-                    alert: alert,
-                    resolvedInSession: resolvedAt != null,
-                  ),
-                  const SizedBox(height: 14),
-                  AlertTimeline(
-                    alert: alert,
-                    loadedAt: provider.lastLoadedAt,
-                    resolvedAt: resolvedAt,
-                  ),
+          ] else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: heading),
+                if (alert.status == AlertStatus.open) ...[
+                  const SizedBox(width: 18),
+                  action,
                 ],
-              );
-              if (width < 900) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [metadata, const SizedBox(height: 14), inspector],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+          const SizedBox(height: 25),
+          if (width < 900) ...[
+            metadata,
+            const SizedBox(height: 16),
+            raw,
+            const SizedBox(height: 16),
+            timeline,
+          ] else
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(flex: 61, child: metadata),
                   const SizedBox(width: 16),
-                  Expanded(flex: 39, child: inspector),
+                  Expanded(
+                    flex: 39,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        raw,
+                        const SizedBox(height: 16),
+                        Expanded(child: timeline),
+                      ],
+                    ),
+                  ),
                 ],
-              );
-            },
-          ),
+              ),
+            ),
         ],
       );
     },

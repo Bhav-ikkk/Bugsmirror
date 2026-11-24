@@ -25,6 +25,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/alerts.json
+    - assets/bugsmirror-logo.png
 
     - assets/fonts/SpaceGrotesk-OFL.txt
     - assets/fonts/IBMPlexMono-OFL.txt

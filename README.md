@@ -1,4 +1,4 @@
-# Security Alerts Dashboard
+# Bugsmirror
 
 ## How to run
 
@@ -31,7 +31,7 @@ Tools • Dart 3.14.0 • DevTools 2.61.0
 - `lib/routing/` maps the Dashboard, Alerts, and individual alert URLs to screens.
 - `lib/screens/` implements the three screens and sends user actions to the provider.
 - `lib/widgets/` contains shared UI, filters, table and cards, pagination, and state views.
-- `lib/theme/` defines the Tripwire palette, Material theme, and typography.
+- `lib/theme/` defines the Bugsmirror palette, Material theme, and typography.
 - `assets/fonts/` bundles Space Grotesk and IBM Plex Mono with their OFL licenses.
 - `lib/utils/` implements alert queries, local dates, and CSV generation and download.
 - `test/` exercises data parsing, sorting, filters, resolution, exports, and screen behavior.

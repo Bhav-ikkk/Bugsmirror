@@ -32,7 +32,7 @@ class _SecurityAlertsAppState extends State<SecurityAlertsApp> {
   Widget build(BuildContext context) => ChangeNotifierProvider(
     create: (_) => AlertsProvider(widget.repository)..load(),
     child: MaterialApp.router(
-      title: 'Security Alerts Dashboard',
+      title: 'Bugsmirror',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       routerConfig: router,

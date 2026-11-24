@@ -13,89 +13,65 @@ class AppShell extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Column(
-      children: [
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: TripwireColors.border)),
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: contentWidth),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 11,
-                ),
-                child: LayoutBuilder(
-                  builder: (context, bounds) {
-                    final brand = Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: TripwireColors.ink,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Center(
-                            child: ColorDot(
-                              TripwireColors.high,
-                              size: 8,
-                              radius: 4,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'tripwire',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.7,
-                              ),
-                        ),
-                      ],
-                    );
-                    final nav = Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _NavLink(
-                          'Overview',
-                          !alertsActive,
-                          () => context.go('/'),
-                        ),
-                        const SizedBox(width: 13),
-                        _NavLink('Alerts', alertsActive, () {
-                          if (!alertsActive) {
-                            context.read<AlertsProvider>().clearFilters();
-                          }
-                          context.go('/alerts');
-                        }),
-                      ],
-                    );
-                    return SizedBox(
-                      width: double.infinity,
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        runSpacing: 6,
-                        spacing: 20,
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 640;
+    return Scaffold(
+      body: Column(
+        children: [
+          DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: TripwireColors.border)),
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: contentWidth),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 16 : 22,
+                    vertical: compact ? 4 : 8,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, bounds) {
+                      final nav = Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Wrap(
-                            spacing: 26,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [brand, nav],
+                          _NavLink(
+                            'Overview',
+                            !alertsActive,
+                            () => context.go('/'),
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const _SourcePill(),
-                              if (bounds.maxWidth >= 650) ...[
-                                const SizedBox(width: 12),
-                                const CircleAvatar(
+                          SizedBox(width: compact ? 6 : 13),
+                          _NavLink('Alerts', alertsActive, () {
+                            if (!alertsActive) {
+                              context.read<AlertsProvider>().clearFilters();
+                            }
+                            context.go('/alerts');
+                          }),
+                        ],
+                      );
+                      final logo = _BrandLogo(width: compact ? 132 : 154);
+                      if (compact) {
+                        return Row(children: [logo, const Spacer(), nav]);
+                      }
+                      return SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 20,
+                          runSpacing: 6,
+                          children: [
+                            Wrap(
+                              spacing: 24,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [logo, nav],
+                            ),
+                            const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _SourcePill(),
+                                SizedBox(width: 12),
+                                CircleAvatar(
                                   radius: 16,
                                   backgroundColor: TripwireColors.ink,
                                   foregroundColor: TripwireColors.surface,
@@ -105,19 +81,53 @@ class AppShell extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
           ),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _BrandLogo extends StatelessWidget {
+  const _BrandLogo({required this.width});
+  final double width;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Bugsmirror',
+    image: true,
+    child: SizedBox(
+      width: width,
+      height: 46,
+      child: ClipRect(
+        child: OverflowBox(
+          minHeight: width,
+          maxHeight: width,
+          child: ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              TripwireColors.canvas,
+              BlendMode.multiply,
+            ),
+            child: Image.asset(
+              'assets/bugsmirror-logo.png',
+              width: width,
+              height: width,
+              excludeFromSemantics: true,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
         ),
-        Expanded(child: child),
-      ],
+      ),
     ),
   );
 }
@@ -129,25 +139,31 @@ class _NavLink extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => TextButton(
-    style: TextButton.styleFrom(
-      foregroundColor: selected ? TripwireColors.ink : TripwireColors.secondary,
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      minimumSize: const Size(0, 39),
-    ),
-    onPressed: onPressed,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: selected ? TripwireColors.ink : Colors.transparent,
-            width: 1.5,
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    child: TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: selected
+            ? TripwireColors.ink
+            : TripwireColors.secondary,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        minimumSize: const Size(0, 44),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: onPressed,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? TripwireColors.ink : Colors.transparent,
+              width: 1.5,
+            ),
           ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
-        child: Text(label),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          child: Text(label, style: const TextStyle(fontSize: 13)),
+        ),
       ),
     ),
   );
@@ -155,6 +171,7 @@ class _NavLink extends StatelessWidget {
 
 class _SourcePill extends StatelessWidget {
   const _SourcePill();
+
   @override
   Widget build(BuildContext context) {
     final (state, loaded) = context.select(
@@ -205,7 +222,8 @@ class PageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (_, bounds) {
-      final gutter = bounds.maxWidth < 600 ? 16.0 : 30.0;
+      final compact = bounds.maxWidth < 640;
+      final gutter = compact ? 16.0 : 30.0;
       return SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: bounds.maxHeight),
@@ -216,7 +234,12 @@ class PageBody extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: contentWidth),
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(gutter, 35, gutter, 48),
+                    padding: EdgeInsets.fromLTRB(
+                      gutter,
+                      compact ? 22 : 35,
+                      gutter,
+                      42,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: children,
@@ -241,17 +264,19 @@ class PageBody extends StatelessWidget {
                         width: double.infinity,
                         child: Wrap(
                           alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 20,
                           runSpacing: 7,
                           children: [
                             Text(
-                              'TRIPWIRE · SECURITY ALERTS FROM YOUR SDK',
+                              'BUGSMIRROR · SECURITY ALERTS FROM YOUR SDK',
                               style: mono(size: 10, spacing: .45),
                             ),
                             Text(
                               'ALL TIMES IN YOUR LOCAL TIME · ${localOffset()}',
                               style: mono(size: 10, spacing: .45),
                             ),
+                            if (compact) const _SourcePill(),
                           ],
                         ),
                       ),

@@ -29,20 +29,24 @@ class AlertCard extends StatelessWidget {
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onOpen,
+      focusColor: TripwireColors.track,
+      hoverColor: TripwireColors.tint,
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(13),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    getThreatDisplayName(alert.threatCode),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 5,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      SeverityChip(alert.severity),
+                      StatusBadge(alert.status),
+                    ],
                   ),
                 ),
                 const Icon(
@@ -52,22 +56,45 @@ class AlertCard extends StatelessWidget {
                 ),
               ],
             ),
-            Text(threatCaption(alert.threatCode), style: mono(size: 10)),
-            const SizedBox(height: 8),
-            Text(app),
+            const SizedBox(height: 9),
             Text(
-              alert.device,
-              style: const TextStyle(color: TripwireColors.secondary),
+              getThreatDisplayName(alert.threatCode),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
+            Text(threatCaption(alert.threatCode), style: mono(size: 10)),
             const SizedBox(height: 9),
             Wrap(
-              spacing: 8,
-              runSpacing: 6,
+              spacing: 7,
+              runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                SeverityChip(alert.severity),
-                StatusBadge(alert.status),
-                Text(formatReportedAt(alert.reportedAt), style: mono(size: 10)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      app.endsWith('(iOS)')
+                          ? Icons.phone_iphone
+                          : Icons.android,
+                      size: 14,
+                      color: TripwireColors.secondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(app, style: const TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+                Text(
+                  '· ${alert.device}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: TripwireColors.secondary,
+                  ),
+                ),
+                Text(
+                  '· ${formatReportedAt(alert.reportedAt)}',
+                  style: mono(size: 10, color: TripwireColors.timestamp),
+                ),
               ],
             ),
           ],

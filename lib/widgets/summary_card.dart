@@ -31,36 +31,51 @@ class SummaryCard extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 218),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(label, style: mono(color: muted, spacing: .65)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(label, style: mono(color: muted, spacing: .65)),
+                  ),
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: urgent ? TripwireColors.high : muted,
+                  ),
+                ],
               ),
-              Icon(icon, size: 18, color: urgent ? TripwireColors.high : muted),
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$value',
+                    style: TextStyle(
+                      fontSize: 62,
+                      height: 1.02,
+                      letterSpacing: -3.3,
+                      color: ink,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      caption,
+                      style: TextStyle(color: muted, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 9,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                '$value',
-                style: TextStyle(
-                  fontSize: 62,
-                  height: 1.02,
-                  letterSpacing: -3.3,
-                  color: ink,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              Text(caption, style: TextStyle(color: muted, fontSize: 13)),
-            ],
-          ),
-          const SizedBox(height: 13),
-          detail,
+          Padding(padding: const EdgeInsets.only(top: 13), child: detail),
         ],
       ),
     );

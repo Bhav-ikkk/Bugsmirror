@@ -75,6 +75,15 @@ class _AlertsScreenState extends State<AlertsScreen> {
         totalItems: all.length,
         onPage: provider.goToPage,
       );
+      final VoidCallback? export = all.isEmpty
+          ? null
+          : () => downloadCsv(exportAlerts(all, provider.appLabel));
+      final heading = Text(
+        'Every alert, one place.',
+        style: width < 640
+            ? pageTitle(width).copyWith(fontSize: 26)
+            : pageTitle(width),
+      );
       return PageBody(
         children: [
           Text(
@@ -82,26 +91,28 @@ class _AlertsScreenState extends State<AlertsScreen> {
             style: mono(spacing: .8),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
-            children: [
-              Text('Every alert, one place.', style: pageTitle(width)),
-              OutlinedButton(
-                onPressed: all.isEmpty
-                    ? null
-                    : () => downloadCsv(exportAlerts(all, provider.appLabel)),
-                child: const Text('Export CSV'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
+          if (width < 800)
+            heading
+          else
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 12,
+              children: [
+                heading,
+                OutlinedButton(
+                  onPressed: export,
+                  child: const Text('Export CSV'),
+                ),
+              ],
+            ),
+          SizedBox(height: width < 800 ? 14 : 24),
           AlertsFilterBar(
             provider: provider,
             matching: all.length,
             onClear: clear,
+            onExport: export,
             onSelectApp: (app) => selectRoute(app, provider.status),
             onSelectStatus: (status) => selectRoute(provider.appId, status),
           ),

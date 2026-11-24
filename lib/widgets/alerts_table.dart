@@ -62,6 +62,14 @@ class AlertsTable extends StatelessWidget {
     final app = appLabel(alert.appId);
     return DataRow(
       key: ValueKey(alert.id),
+      mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.click),
+      color: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.focused)
+            ? TripwireColors.track
+            : states.contains(WidgetState.hovered)
+            ? TripwireColors.tableHover
+            : null,
+      ),
       onSelectChanged: (_) => onOpen(alert.id),
       cells: [
         DataCell(
@@ -126,7 +134,10 @@ class AlertsTable extends StatelessWidget {
           ),
         ),
         DataCell(
-          Text(formatReportedAt(alert.reportedAt), style: mono(size: 10)),
+          Text(
+            formatReportedAt(alert.reportedAt),
+            style: mono(size: 10, color: TripwireColors.timestamp),
+          ),
         ),
         DataCell(StatusBadge(alert.status)),
         const DataCell(

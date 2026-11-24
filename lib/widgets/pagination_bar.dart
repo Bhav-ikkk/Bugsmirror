@@ -42,17 +42,19 @@ class PaginationBar extends StatelessWidget {
               spacing: 8,
               runSpacing: 6,
               children: [
-                OutlinedButton(
-                  onPressed: page > 1 ? () => onPage(page - 1) : null,
-                  child: const Text('Previous'),
+                _button(
+                  context,
+                  'Previous',
+                  page > 1 ? () => onPage(page - 1) : null,
                 ),
                 Text(
                   'Page $page of $totalPages',
                   style: mono(color: TripwireColors.ink),
                 ),
-                OutlinedButton(
-                  onPressed: page < totalPages ? () => onPage(page + 1) : null,
-                  child: const Text('Next'),
+                _button(
+                  context,
+                  'Next',
+                  page < totalPages ? () => onPage(page + 1) : null,
                 ),
               ],
             ),
@@ -61,4 +63,19 @@ class PaginationBar extends StatelessWidget {
       ),
     );
   }
+
+  Widget _button(BuildContext context, String label, VoidCallback? onPressed) =>
+      SizedBox(
+        height: MediaQuery.sizeOf(context).width < 800 ? 44 : 34,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            disabledForegroundColor: TripwireColors.muted,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(label),
+        ),
+      );
 }

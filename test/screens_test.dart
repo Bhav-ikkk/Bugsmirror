@@ -16,7 +16,7 @@ import 'package:security_alerts_dashboard/widgets/alerts_table.dart';
 void main() {
   final source = File('assets/alerts.json').readAsStringSync();
   final repository = AlertRepository(assetLoader: () async => source);
-  for (final width in [400, 500, 768, 799, 800, 1024, 1280]) {
+  for (final width in [400, 500, 600, 768, 799, 800, 1024, 1280]) {
     testWidgets('alerts layout at ${width}px', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = Size(width.toDouble(), 900);
@@ -40,7 +40,7 @@ void main() {
     });
   }
 
-  for (final width in [400, 500, 768, 799, 800, 1024, 1280]) {
+  for (final width in [400, 500, 600, 768, 799, 800, 1024, 1280]) {
     for (final (route, marker) in [
       ('/', 'Latest open'),
       ('/alerts/al_105', 'Every field'),
@@ -136,6 +136,108 @@ void main() {
       expect(find.text('Missing OS version is shown as -'), findsNothing);
     },
   );
+
+  for (final (route, title) in [
+    ('/', 'Latest open'),
+    ('/alerts', 'Every alert, one place.'),
+    ('/alerts/al_105', 'Every field'),
+  ]) {
+    testWidgets('$route fits a short 400×667 viewport', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(400, 667);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        SecurityAlertsApp(initialLocation: route, repository: repository),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text(title), findsOneWidget);
+      if (route == '/alerts') {
+        expect(
+          tester.getBottomLeft(find.byType(AlertCard).first).dy,
+          lessThan(667),
+        );
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+    'mobile filter sheet applies selections and preserves the route',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(400, 667);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        SecurityAlertsApp(initialLocation: '/alerts', repository: repository),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Filters'));
+      await tester.pumpAndSettle();
+      final sheet = find.byType(BottomSheet);
+      Finder inSheet(String text) =>
+          find.descendant(of: sheet, matching: find.text(text));
+      await tester.tap(inSheet('All apps'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('QuickPay (iOS)').last);
+      await tester.pumpAndSettle();
+      await tester.tap(inSheet('High'));
+      await tester.pumpAndSettle();
+      await tester.tap(inSheet('Open'));
+      await tester.pumpAndSettle();
+      expect(sheet, findsOneWidget);
+      await tester.tap(inSheet('Done'));
+      await tester.pumpAndSettle();
+      expect(find.text('Filters · 3'), findsOneWidget);
+      expect(find.text('2 alerts · filtered'), findsOneWidget);
+      final router = GoRouter.of(tester.element(find.byType(AlertCard).first));
+      expect(router.routeInformationProvider.value.uri.queryParameters, {
+        'app': 'app_2',
+        'status': 'open',
+      });
+      await tester.tap(find.text('Clear'));
+      await tester.pumpAndSettle();
+      expect(find.text('14 alerts · no filters applied'), findsOneWidget);
+    },
+  );
+
+  testWidgets('desktop metadata and timeline align for all 14 alert records', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 960);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      SecurityAlertsApp(
+        initialLocation: '/alerts/al_105',
+        repository: repository,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    final router = GoRouter.of(tester.element(find.byType(FieldsPanel)));
+    final records = (jsonDecode(source) as Map)['alerts'] as List;
+    expect(records, hasLength(14));
+    for (final record in records) {
+      router.go('/alerts/${record['id']}');
+      await tester.pumpAndSettle();
+      final fields = tester.getRect(find.byType(FieldsPanel));
+      final raw = tester.getRect(find.byType(RawAlertPanel));
+      final timeline = tester.getRect(find.byType(AlertTimeline));
+      expect(raw.top, closeTo(fields.top, .5), reason: record['id'] as String);
+      expect(
+        timeline.bottom,
+        closeTo(fields.bottom, .5),
+        reason: record['id'] as String,
+      );
+      expect(timeline.top - raw.bottom, closeTo(16, .5));
+      expect(tester.takeException(), isNull);
+    }
+  });
 
   testWidgets('cold detail loads, then cancel and confirm resolution', (
     tester,
