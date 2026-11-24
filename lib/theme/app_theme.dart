@@ -106,9 +106,11 @@ final appTheme = ThemeData(
     onSurface: TripwireColors.ink,
     onSurfaceVariant: TripwireColors.secondary,
     outline: TripwireColors.border,
+    outlineVariant: TripwireColors.row,
   ),
   extensions: const [tripwire],
   dividerColor: TripwireColors.row,
+  dividerTheme: const DividerThemeData(color: TripwireColors.row, thickness: 1),
   filledButtonTheme: FilledButtonThemeData(style: control(filled: true)),
   outlinedButtonTheme: OutlinedButtonThemeData(style: control()),
   inputDecorationTheme: InputDecorationTheme(

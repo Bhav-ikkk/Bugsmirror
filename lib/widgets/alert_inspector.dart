@@ -90,7 +90,12 @@ class FieldsPanel extends StatelessWidget {
                   children: [
                     SizedBox(width: 151, child: label),
                     const SizedBox(width: 8),
-                    Expanded(child: field.value),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: field.value,
+                      ),
+                    ),
                   ],
                 );
               },
