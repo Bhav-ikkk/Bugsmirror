@@ -45,6 +45,7 @@ The repository loads the JSON after a one-second delay. The provider keeps the a
 - Direct alert links (for example `/#/alerts/al_105`), detail metadata, confirmation, and immediate resolution updates.
 - Loading, error, Retry, unmatched filters, and missing alert states. Set `simulateError` in `lib/data/alert_repository.dart` to verify the error path.
 - CSV download of every matching alert in the current sort order.
+- Verification includes automated checks at 400, 500, 768, 799, 800, 1024, and 1280 px.
 - Resolution is session-only. Refreshing the browser restores the original fixture.
 
 ## How AI helped
@@ -56,10 +57,12 @@ The repository loads the JSON after a one-second delay. The provider keeps the a
 
 ## Questions
 
-1. **Where does your app keep the list of alerts, and how does the Dashboard find out that an alert was resolved?**  
+1. **Where does your app keep the list of alerts, and how does the Dashboard find out that an alert was resolved?**
+
    Draft to put in your own words. `AlertsProvider` keeps the current list in `_alerts`. `resolveAlert` replaces the existing entry with a resolved copy and calls `notifyListeners()`. The Dashboard reads the provider through `LoadGuard`, so it rebuilds with recalculated counts.
 
-2. **What would you change to load alerts from a real API instead of the JSON file?**  
+2. **What would you change to load alerts from a real API instead of the JSON file?**
+
    Draft to put in your own words. Give `AlertRepository` an HTTP client and base URL, fetch the JSON over HTTP, and keep validation at the repository boundary. Add a repository method to persist resolutions and call it from `AlertsProvider.resolveAlert`, with a pending state and a recoverable error if the update fails.
 
 ## Video
