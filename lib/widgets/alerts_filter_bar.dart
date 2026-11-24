@@ -29,8 +29,9 @@ class _AlertsFilterBarState extends State<AlertsFilterBar> {
   @override
   void didUpdateWidget(covariant AlertsFilterBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (search.text != widget.provider.deviceSearch)
+    if (search.text != widget.provider.deviceSearch) {
       search.text = widget.provider.deviceSearch;
+    }
   }
 
   @override

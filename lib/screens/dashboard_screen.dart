@@ -14,6 +14,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) => LoadGuard(
     loaded: (provider) {
       final theme = Theme.of(context).textTheme;
+      final summaries = provider.summaries;
       return PageBody(
         children: [
           Text(
@@ -98,12 +99,12 @@ class DashboardScreen extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
-                if (provider.summaries.isEmpty)
+                if (summaries.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(18),
                     child: Text('No monitored apps'),
                   ),
-                for (final summary in provider.summaries) ...[
+                for (final summary in summaries) ...[
                   ListTile(
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -143,9 +144,7 @@ class DashboardScreen extends StatelessWidget {
                       context.go(alertsLocation(summary.app.id));
                     },
                   ),
-                  if (summary != provider.summaries.last &&
-                      summary.app.id != provider.summaries.last.app.id)
-                    const Divider(height: 1),
+                  if (summary != summaries.last) const Divider(height: 1),
                 ],
               ],
             ),

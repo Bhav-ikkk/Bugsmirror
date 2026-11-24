@@ -20,12 +20,13 @@ class AlertDetailScreen extends StatelessWidget {
     loaded: (provider) {
       void goBack() => context.go(alertsLocation(provider.appId));
       final alert = provider.byId(id);
-      if (alert == null)
+      if (alert == null) {
         return MessageView(
           title: 'Alert not found',
           action: 'Back to alerts',
           onAction: goBack,
         );
+      }
 
       final fields = <String, String>{
         'Alert ID': alert.id,
@@ -144,8 +145,9 @@ class AlertDetailScreen extends StatelessWidget {
                       ],
                     ),
                   );
-                  if (context.mounted && confirmed == true)
+                  if (context.mounted && confirmed == true) {
                     provider.resolveAlert(alert.id);
+                  }
                 },
               ),
             ),

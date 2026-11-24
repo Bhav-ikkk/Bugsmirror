@@ -61,8 +61,9 @@ class AppShell extends StatelessWidget {
                         label: 'Alerts',
                         selected: alertsActive,
                         onPressed: () {
-                          if (!alertsActive)
+                          if (!alertsActive) {
                             context.read<AlertsProvider>().clearFilters();
+                          }
                           context.go('/alerts');
                         },
                       ),
